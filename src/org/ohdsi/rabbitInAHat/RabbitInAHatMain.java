@@ -1,14 +1,14 @@
 /*******************************************************************************
  * Copyright 2016 Observational Health Data Sciences and Informatics
- * 
+ *
  * This file is part of WhiteRabbit
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,7 +64,8 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 	public final static String		ACTION_CMD_GENERATE_ETL_DOCUMENT	= "Generate ETL Document";
 	public final static String		ACTION_CMD_GENERATE_TEST_FRAMEWORK	= "Generate ETL Test Framework";
 	public final static String		ACTION_CMD_GENERATE_PACKAGE_TEST_FRAMEWORK	= "Generate ETL Test Framework (for R Packages)";
-	
+	public final static String		ACTION_CMD_GENERATE_PSEUDOCODE_SQL = "Generate Pseudocode SQL";
+
 	public final static String		ACTION_CMD_DISCARD_COUNTS			= "Discard Value Counts";
 	public final static String		ACTION_CMD_FILTER					= "Filter";
 	public final static String		ACTION_CMD_MAKE_MAPPING				= "Make Mappings";
@@ -82,6 +83,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 	private final static FileFilter	FILE_FILTER_GZ						= new FileNameExtensionFilter("GZIP Files (*.gz)", "gz");
 	private final static FileFilter	FILE_FILTER_JSON					= new FileNameExtensionFilter("JSON Files (*.json)", "json");
 	private final static FileFilter	FILE_FILTER_DOCX					= new FileNameExtensionFilter("Microsoft Word documents (*.docx)", "docx");
+	private final static FileFilter	FILE_FILTER_SQL						= new FileNameExtensionFilter("Pseudocode SQL (*.sql)", "sql");
 	private final static FileFilter	FILE_FILTER_CSV						= new FileNameExtensionFilter("Text Files (*.csv)", "csv");
 	private final static FileFilter	FILE_FILTER_R						= new FileNameExtensionFilter("R script (*.r)", "r");
 	private final static FileFilter	FILE_FILTER_XLSX					= new FileNameExtensionFilter("XLSX files (*.xlsx)", "xlsx");
@@ -223,6 +225,12 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 		generateDocItem.setActionCommand(ACTION_CMD_GENERATE_ETL_DOCUMENT);
 		fileMenu.add(generateDocItem);
 
+		JMenuItem generatePseudocodeSqlItem = new JMenuItem(ACTION_CMD_GENERATE_PSEUDOCODE_SQL);
+		generatePseudocodeSqlItem.addActionListener(this);
+		generatePseudocodeSqlItem.setActionCommand(ACTION_CMD_GENERATE_PSEUDOCODE_SQL);
+		fileMenu.add(generatePseudocodeSqlItem);
+
+
 		JMenuItem generateTestFrameworkItem = new JMenuItem(ACTION_CMD_GENERATE_TEST_FRAMEWORK);
 		generateTestFrameworkItem.addActionListener(this);
 		generateTestFrameworkItem.setActionCommand(ACTION_CMD_GENERATE_TEST_FRAMEWORK);
@@ -232,7 +240,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 		generatePackageTestFrameworkItem.addActionListener(this);
 		generatePackageTestFrameworkItem.setActionCommand(ACTION_CMD_GENERATE_PACKAGE_TEST_FRAMEWORK);
 		fileMenu.add(generatePackageTestFrameworkItem);
-		
+
 		JMenu editMenu = new JMenu("Edit");
 		menuBar.add(editMenu);
 
@@ -335,7 +343,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 
 	/**
 	 * Display file chooser for a path to save or open to
-	 * 
+	 *
 	 * @param saveMode
 	 *            true to display a save dialog, false for open
 	 * @param filter
@@ -365,6 +373,8 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 			path += ".json.gz";
 		if (path != null && fileFilter[0] == FILE_FILTER_DOCX && !path.toLowerCase().endsWith(".docx"))
 			path += ".docx";
+		if (path != null && fileFilter[0] == FILE_FILTER_SQL && !path.toLowerCase().endsWith(".sql"))
+			path += ".sql";
 		return path;
 	}
 
@@ -390,6 +400,9 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 				break;
 			case ACTION_CMD_GENERATE_ETL_DOCUMENT:
 				doGenerateEtlDoc(chooseSavePath(FILE_FILTER_DOCX));
+				break;
+			case ACTION_CMD_GENERATE_PSEUDOCODE_SQL:
+				doGeneratePseudocodeSQL(chooseSavePath(FILE_FILTER_SQL));
 				break;
 			case ACTION_CMD_GENERATE_TEST_FRAMEWORK:
 				doGenerateTestFramework(chooseSavePath(FILE_FILTER_R));
@@ -450,7 +463,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 	}
-	
+
 	private void doGeneratePackageTestFramework(String filename) {
 		if (filename != null) {
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -492,7 +505,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 		ETL etl = new ETL(ObjectExchange.etl.getSourceDatabase(), Database.generateCDMModel(cdmVersion));
 		etl.copyETLMappings(ObjectExchange.etl);
 		tableMappingPanel.setMapping(etl.getTableToTableMapping());
-		ObjectExchange.etl = etl;		
+		ObjectExchange.etl = etl;
 	}
 
 	private void doOpenFilterDialog() {
@@ -613,6 +626,14 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 		if (filename != null) {
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			ETLDocumentGenerator.generate(ObjectExchange.etl, filename);
+			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		}
+	}
+
+	private void doGeneratePseudocodeSQL(String filename) {
+		if (filename != null) {
+			frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			ETLPseudocodeSQLGenerator.generate(ObjectExchange.etl, filename);
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 	}
