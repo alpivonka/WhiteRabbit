@@ -29,10 +29,20 @@ public class Field implements MappableItem {
 	private String				description			= "";
 	private int					maxLength;
 	private boolean				isStem;
+	private int 				fillRate;
 
 	public Field(String name, Table table) {
 		this.table = table;
 		this.name = name;
+	}
+
+
+	public int getFillRate() {
+		return fillRate;
+	}
+
+	public void setFillRate(int fillRate) {
+		this.fillRate = fillRate;
 	}
 
 	public Database getDb() {

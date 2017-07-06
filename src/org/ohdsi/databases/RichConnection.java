@@ -152,6 +152,8 @@ public class RichConnection {
 		} else if (dbType == DbType.MSACCESS) {
 			query = "SELECT Name FROM sys.MSysObjects WHERE Type=1 AND Flags=0;";
 		}
+		//IMPALA
+		//Show tables database.toUpperCase();
 
 		for (Row row : query(query))
 			names.add(row.get(row.getFieldNames().get(0)));
@@ -166,6 +168,9 @@ public class RichConnection {
 		} else if (dbType == DbType.MYSQL)
 			for (Row row : query("SHOW COLUMNS FROM " + table))
 				names.add(row.get("COLUMN_NAME"));
+
+		//else impala
+		 // SHOW COLUMN STATS table.toUpperCase
 		else
 			throw new RuntimeException("DB type not supported");
 

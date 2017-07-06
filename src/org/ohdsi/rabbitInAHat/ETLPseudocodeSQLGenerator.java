@@ -37,11 +37,12 @@ public class ETLPseudocodeSQLGenerator {
 
     /**
      * Still a work in progress, needing more elaborate examples
-     *
+     * This will only generate Pseudocode SQL for mapped fields ....
      * @param etl
      * @param filename
      */
     public static void generate(ETL etl,String filename) {
+
         StringBuilder output = new StringBuilder();
         for (Table targetTable : etl.getTargetDatabase().getTables()) {
             for (ItemToItemMap tableToTableMap : etl.getTableToTableMapping().getSourceToTargetMaps()) {
@@ -98,6 +99,15 @@ public class ETLPseudocodeSQLGenerator {
             }
         }//end loops
         //write out put to file
+        String[] fileNameSplit = filename.split("\\.(?=[^\\.]+$)");
+        writeToFile(output.toString().toUpperCase(),fileNameSplit[0]+"_ETLPseudocodeSQL"+"."+fileNameSplit[1]);
+
+        generateTargetFillRatesSQL(etl, filename);
+        generateSourceFillRatesSQL(etl, filename);
+    }
+
+
+    private static void writeToFile(String output, String filename){
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
             writer.write(output.toString());
@@ -106,7 +116,65 @@ public class ETLPseudocodeSQLGenerator {
         }catch(Exception e){
             e.printStackTrace();
         }
-        //check if file exists? and over write it
+    }
+    /*
+    Source and target Fill Rates SQL
+    SELECT 'StringTableName' AS TABLE_NAME,'StringColumnName' AS TABLE_COLUMN,
+    100.0 * COUNT(columnName) / COUNT(1) AS FILL_RATE
+    FROM tableName
 
+    CREATE table FILL_RATE(
+    TABLE_NAME STRING,
+    TABLE_COLUMN STRING,
+    FILL_RATE LONG)
+ */
+
+    public static String INSERT_INTO_STATEMENT = "INSERT INTO FILL_RATE(TABLE_NAME,TABLE_COLUMN,FILL_RATE)";
+
+    public static String FILLRATE_SQL = INSERT_INTO_STATEMENT
+            +"\nSELECT '#TABLENAME#' AS TABLE_NAME,'#COLUMNNAME#' AS TABLE_COLUMN,"
+            +"\n(100.0 * COUNT(#COLUMNNAME#)) / COUNT(1) AS FILL_RATE"
+            +"\nFROM #TABLENAME#;\n ";
+
+    public static String FILLRATE_INSERT=INSERT_INTO_STATEMENT+"\n VALUES(";
+
+    /**
+     * Generates the Insert statements for the Source DB's Fill Rates
+     * Table to attributes.
+     * @param etl
+     * @param filename
+     */
+    public static void generateSourceFillRatesSQL(ETL etl,String filename) {
+        StringBuilder fill_rate_sql_SB = new StringBuilder();
+        for(Table sourceTable:etl.getSourceDatabase().getTables()){
+            fill_rate_sql_SB.append("--"+sourceTable.getName()+"\n");
+            for(Field field:sourceTable.getFields()) {
+                fill_rate_sql_SB.append(FILLRATE_INSERT+"'"+sourceTable.getName()+"','"+field.getName()+"','"+field.getFillRate()+"');\n");
+            }
+        }
+        //System.out.println(fill_rate_sql_SB.toString());
+        String[] fileNameSplit = filename.split("\\.(?=[^\\.]+$)");
+        writeToFile(fill_rate_sql_SB.toString().toUpperCase(),fileNameSplit[0]+"_SourceDB_FillRates"+"."+fileNameSplit[1]);
+    }
+
+    /**
+     * Generates the Insert statements for the Target DB's Fill Rates
+     * Table to attributes.
+     * @param etl
+     * @param filename
+     */
+    public static void generateTargetFillRatesSQL(ETL etl,String filename) {
+        StringBuilder fill_rate_sql_SB = new StringBuilder();
+        for(Table targetTable:etl.getTargetDatabase().getTables()){
+            fill_rate_sql_SB.append("--"+targetTable.getName()+"\n");
+            for(Field field:targetTable.getFields()) {
+                fill_rate_sql_SB.append(
+                        FILLRATE_SQL.toString().replaceAll("#TABLENAME#", targetTable.getName())
+                                .replaceAll("#COLUMNNAME#", field.getName()));
+            }
+        }
+
+        String[] fileNameSplit = filename.split("\\.(?=[^\\.]+$)");
+        writeToFile(fill_rate_sql_SB.toString().toUpperCase(),fileNameSplit[0]+"_TargetDB_FillRates"+"."+fileNameSplit[1]);
     }
 }
