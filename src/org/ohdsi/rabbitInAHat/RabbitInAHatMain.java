@@ -225,11 +225,6 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 		generateDocItem.setActionCommand(ACTION_CMD_GENERATE_ETL_DOCUMENT);
 		fileMenu.add(generateDocItem);
 
-		JMenuItem generatePseudocodeSqlItem = new JMenuItem(ACTION_CMD_GENERATE_PSEUDOCODE_SQL);
-		generatePseudocodeSqlItem.addActionListener(this);
-		generatePseudocodeSqlItem.setActionCommand(ACTION_CMD_GENERATE_PSEUDOCODE_SQL);
-		fileMenu.add(generatePseudocodeSqlItem);
-
 
 		JMenuItem generateTestFrameworkItem = new JMenuItem(ACTION_CMD_GENERATE_TEST_FRAMEWORK);
 		generateTestFrameworkItem.addActionListener(this);
@@ -401,9 +396,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 			case ACTION_CMD_GENERATE_ETL_DOCUMENT:
 				doGenerateEtlDoc(chooseSavePath(FILE_FILTER_DOCX));
 				break;
-			case ACTION_CMD_GENERATE_PSEUDOCODE_SQL:
-				doGeneratePseudocodeSQL(chooseSavePath(FILE_FILTER_SQL));
-				break;
+
 			case ACTION_CMD_GENERATE_TEST_FRAMEWORK:
 				doGenerateTestFramework(chooseSavePath(FILE_FILTER_R));
 				break;
@@ -624,19 +617,24 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 
 	private void doGenerateEtlDoc(String filename) {
 		if (filename != null) {
+			ETLDocumentDialog dialog = new ETLDocumentDialog(frame);
+			dialog.pack();
+			dialog.setVisible(true);
+			DialogStatus ds = dialog.etlDialogStatus;
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			ETLDocumentGenerator.generate(ObjectExchange.etl, filename);
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			if(ds.isOk() && ds.isGenerateETLDocument()) {
+				ETLDocumentGenerator.generate(ObjectExchange.etl, filename);
+			}
+			if(ds.isOk() && (ds.isGeneratePseudocodeSql() ||
+					ds.isSourceFillRates() ||
+					ds.isTargetFillRates())){
+				ETLPseudocodeSQLGenerator.generate(ObjectExchange.etl, filename,ds);
+			}
 		}
 	}
 
-	private void doGeneratePseudocodeSQL(String filename) {
-		if (filename != null) {
-			frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			ETLPseudocodeSQLGenerator.generate(ObjectExchange.etl, filename);
-			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		}
-	}
+
 
 	private void doMarkCompleted() {
 		this.tableMappingPanel.markCompleted();

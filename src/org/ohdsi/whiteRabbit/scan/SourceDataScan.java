@@ -37,6 +37,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.ohdsi.databases.DbType;
 import org.ohdsi.databases.RichConnection;
 import org.ohdsi.databases.RichConnection.QueryResult;
+import org.ohdsi.utilities.GenericSQLStatements;
 import org.ohdsi.utilities.StringUtilities;
 import org.ohdsi.utilities.collections.CountingSet;
 import org.ohdsi.utilities.collections.CountingSet.Count;
@@ -176,18 +177,18 @@ public class SourceDataScan {
 		// Create overview sheet
 		Sheet sheet = workbook.createSheet("Overview");
 		if (!scanValues) {
-			addRow(sheet, "Table", "Field", "Type", "N rows");
+			addRow(sheet, "Table", "Field", "Type", "N rows","Fill Rate");
 			for (String table : tables) {
 				for (FieldInfo fieldInfo : tableToFieldInfos.get(table))
-					addRow(sheet, table, fieldInfo.name, fieldInfo.getTypeDescription(), Long.valueOf(fieldInfo.rowCount));
+					addRow(sheet, table, fieldInfo.name, fieldInfo.getTypeDescription(), Long.valueOf(fieldInfo.rowCount),fieldInfo.fillRate);
 				addRow(sheet, "");
 			}
 		} else {
-			addRow(sheet, "Table", "Field", "Type", "Max length", "N rows", "N rows checked", "Fraction empty");
+			addRow(sheet, "Table", "Field", "Type", "Max length", "N rows", "N rows checked", "Fraction empty","Fill Rate");
 			for (String table : tables) {
 				for (FieldInfo fieldInfo : tableToFieldInfos.get(table))
 					addRow(sheet, table, fieldInfo.name, fieldInfo.getTypeDescription(), Integer.valueOf(fieldInfo.maxLength),
-							Long.valueOf(fieldInfo.rowCount), Long.valueOf(fieldInfo.nProcessed), fieldInfo.getFractionEmpty());
+							Long.valueOf(fieldInfo.rowCount), Long.valueOf(fieldInfo.nProcessed), fieldInfo.getFractionEmpty(),fieldInfo.fillRate);
 				addRow(sheet, "");
 			}
 
@@ -248,11 +249,31 @@ public class SourceDataScan {
 		}
 	}
 
+	/**
+	 * NEW AWP
+	 * Go after the source datas table/field fill rates
+	 * @param fieldInfos
+	 * @param targetTable
+	 * @param connection
+	 */
+	private void getFieldFillRates(List<FieldInfo> fieldInfos,String targetTable,RichConnection connection){
+		for(FieldInfo field:fieldInfos){
+			String query = GenericSQLStatements.FILLRATE_ONLY_SQL.toString().replaceAll("#TABLENAME#", targetTable)
+					.replaceAll("#COLUMNNAME#", field.name);
+			QueryResult result =connection.query(query);
+			for (org.ohdsi.utilities.files.Row row : result) {
+				field.fillRate = row.getLong("FILL_RATE");
+			}
+			result.close();
+		}
+	}
 	private List<FieldInfo> processDatabaseTable(String table, RichConnection connection) {
 		StringUtilities.outputWithTime("Scanning table " + table);
 
 		long rowCount = connection.getTableSize(table);
 		List<FieldInfo> fieldInfos = fetchTableStructure(connection, table);
+		//AWP
+		getFieldFillRates(fieldInfos,table,connection);
 		if (scanValues) {
 			int actualCount = 0;
 			QueryResult queryResult = null;
@@ -402,6 +423,7 @@ public class SourceDataScan {
 		public boolean				isDate			= true;
 		public boolean				isFreeText		= false;
 		public boolean				tooManyValues	= false;
+		public long					fillRate;
 
 		public FieldInfo(String name) {
 			this.name = name;

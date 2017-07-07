@@ -7,6 +7,7 @@ import org.ohdsi.rabbitInAHat.dataModel.ItemToItemMap;
 import org.ohdsi.rabbitInAHat.dataModel.MappableItem;
 import org.ohdsi.rabbitInAHat.dataModel.Mapping;
 import org.ohdsi.rabbitInAHat.dataModel.Table;
+import org.ohdsi.utilities.GenericSQLStatements;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -41,68 +42,71 @@ public class ETLPseudocodeSQLGenerator {
      * @param etl
      * @param filename
      */
-    public static void generate(ETL etl,String filename) {
+    public static void generate(ETL etl,String filename,DialogStatus ds) {
 
-        StringBuilder output = new StringBuilder();
-        for (Table targetTable : etl.getTargetDatabase().getTables()) {
-            for (ItemToItemMap tableToTableMap : etl.getTableToTableMapping().getSourceToTargetMaps()) {
-                if (tableToTableMap.getTargetItem() == targetTable) {
-                    StringBuilder insertIntoList = new StringBuilder();
-                    StringBuilder sourceSelectList = new StringBuilder();
-                    StringBuilder logic = new StringBuilder();
-                    StringBuilder comment = new StringBuilder();
+        if(ds.isGeneratePseudocodeSql()) {
+            StringBuilder output = new StringBuilder();
+            for (Table targetTable : etl.getTargetDatabase().getTables()) {
+                for (ItemToItemMap tableToTableMap : etl.getTableToTableMapping().getSourceToTargetMaps()) {
+                    if (tableToTableMap.getTargetItem() == targetTable) {
+                        StringBuilder insertIntoList = new StringBuilder();
+                        StringBuilder sourceSelectList = new StringBuilder();
+                        StringBuilder logic = new StringBuilder();
+                        StringBuilder comment = new StringBuilder();
 
-                    Table sourceTable = (Table) tableToTableMap.getSourceItem();
-                    Mapping<Field> fieldtoFieldMapping = etl.getFieldToFieldMapping(sourceTable, targetTable);
+                        Table sourceTable = (Table) tableToTableMap.getSourceItem();
+                        Mapping<Field> fieldtoFieldMapping = etl.getFieldToFieldMapping(sourceTable, targetTable);
 
-                    for (MappableItem targetField : fieldtoFieldMapping.getTargetItems()) {
+                        for (MappableItem targetField : fieldtoFieldMapping.getTargetItems()) {
 
-                        for (ItemToItemMap fieldToFieldMap : fieldtoFieldMapping.getSourceToTargetMaps()) {
-                            if (fieldToFieldMap.getTargetItem() == targetField) {
-                                if (sourceSelectList.length() != 0) {
-                                    sourceSelectList.append("\n,");
+                            for (ItemToItemMap fieldToFieldMap : fieldtoFieldMapping.getSourceToTargetMaps()) {
+                                if (fieldToFieldMap.getTargetItem() == targetField) {
+                                    if (sourceSelectList.length() != 0) {
+                                        sourceSelectList.append("\n,");
+                                    }
+                                    sourceSelectList.append(sourceTable.getName() + "." + fieldToFieldMap.getSourceItem().getName().trim() + " "
+                                            + startSQLComment + sourceTable.getFieldByName(fieldToFieldMap.getSourceItem().getName().trim()).getType() + endSQLComment
+                                            + " AS " + fieldToFieldMap.getTargetItem().getName().trim() + " "
+                                            + startSQLComment + targetTable.getFieldByName(fieldToFieldMap.getTargetItem().getName().trim()).getType() + endSQLComment);
+                                    if (!isNullOrEmptyString(fieldToFieldMap.getLogic().trim()))
+                                        sourceSelectList.append("\n /* FieldToField LOGIC : " + fieldToFieldMap.getLogic().trim() + "*/");
+                                    if (!isNullOrEmptyString(fieldToFieldMap.getComment().trim()))
+                                        sourceSelectList.append("\n /* FieldToField COMMENT : " + fieldToFieldMap.getComment().trim() + "*/");
+                                    if (insertIntoList.length() != 0)
+                                        insertIntoList.append(",");
+                                    insertIntoList.append(fieldToFieldMap.getTargetItem().getName().trim());
                                 }
-                                sourceSelectList.append(sourceTable.getName() + "." + fieldToFieldMap.getSourceItem().getName().trim()+" "
-                                        + startSQLComment + sourceTable.getFieldByName(fieldToFieldMap.getSourceItem().getName().trim()).getType() + endSQLComment
-                                        + " AS " + fieldToFieldMap.getTargetItem().getName().trim()+" "
-                                        + startSQLComment + targetTable.getFieldByName(fieldToFieldMap.getTargetItem().getName().trim()).getType() + endSQLComment);
-                                if (!isNullOrEmptyString(fieldToFieldMap.getLogic().trim()))
-                                    sourceSelectList.append("\n /* FieldToField LOGIC : " + fieldToFieldMap.getLogic().trim() + "*/");
-                                if (!isNullOrEmptyString(fieldToFieldMap.getComment().trim()))
-                                    sourceSelectList.append("\n /* FieldToField COMMENT : " + fieldToFieldMap.getComment().trim() + "*/");
-                                if (insertIntoList.length() != 0)
-                                    insertIntoList.append(",");
-                                insertIntoList.append(fieldToFieldMap.getTargetItem().getName().trim());
                             }
-                        }
 
-                        for (Field field : targetTable.getFields()) {
-                            if (field.getName().equals(targetField.getName())) {
-                                if (comment.length() != 0)
-                                    comment.append("\n");
-                                if (!isNullOrEmptyString(field.getComment().trim()))
-                                    comment.append(" /* Target Field Comment : " + field.getComment().trim() + "*/");
+                            for (Field field : targetTable.getFields()) {
+                                if (field.getName().equals(targetField.getName())) {
+                                    if (comment.length() != 0)
+                                        comment.append("\n");
+                                    if (!isNullOrEmptyString(field.getComment().trim()))
+                                        comment.append(" /* Target Field Comment : " + field.getComment().trim() + "*/");
+                                }
                             }
                         }
+                        if (!isNullOrEmptyString(insertIntoList.toString()))
+                            output.append("INSERT INTO " + targetTable.getName().trim().toUpperCase() + " (" + insertIntoList.toString().toUpperCase() + ")");
+                        if (!isNullOrEmptyString(sourceSelectList.toString())) {
+                            output.append("\nSELECT \n" + sourceSelectList.toString().toUpperCase());
+                            output.append("\nFROM " + sourceTable.getName().trim().toUpperCase() + ";\n\n");
+                        }
+                        if (!isNullOrEmptyString(logic.toString()))
+                            output.append(logic.toString().toUpperCase());
+                        if (!isNullOrEmptyString(comment.toString()))
+                            output.append(comment.toString().toUpperCase());
                     }
-                    if (!isNullOrEmptyString(insertIntoList.toString()))
-                        output.append("INSERT INTO " + targetTable.getName().trim().toUpperCase() + " (" + insertIntoList.toString().toUpperCase() + ")");
-                    if (!isNullOrEmptyString(sourceSelectList.toString())) {
-                        output.append("\nSELECT \n" + sourceSelectList.toString().toUpperCase());
-                        output.append("\nFROM " + sourceTable.getName().trim().toUpperCase() + ";\n\n");
-                    }
-                    if (!isNullOrEmptyString(logic.toString()))
-                        output.append(logic.toString().toUpperCase());
-                    if (!isNullOrEmptyString(comment.toString()))
-                        output.append(comment.toString().toUpperCase());
                 }
-            }
-        }//end loops
-        //write out put to file
-        String[] fileNameSplit = filename.split("\\.(?=[^\\.]+$)");
-        writeToFile(output.toString().toUpperCase(),fileNameSplit[0]+"_ETLPseudocodeSQL"+"."+fileNameSplit[1]);
-
+            }//end loops
+            //write out put to file
+            String[] fileNameSplit = filename.split("\\.(?=[^\\.]+$)");
+            writeToFile(output.toString().toUpperCase(), fileNameSplit[0] + "_ETLPseudocodeSQL" + ".sql" );
+        }
+        if(ds.isTargetFillRates())
         generateTargetFillRatesSQL(etl, filename);
+        if(ds.isSourceFillRates())
         generateSourceFillRatesSQL(etl, filename);
     }
 
@@ -129,14 +133,7 @@ public class ETLPseudocodeSQLGenerator {
     FILL_RATE LONG)
  */
 
-    public static String INSERT_INTO_STATEMENT = "INSERT INTO FILL_RATE(TABLE_NAME,TABLE_COLUMN,FILL_RATE)";
 
-    public static String FILLRATE_SQL = INSERT_INTO_STATEMENT
-            +"\nSELECT '#TABLENAME#' AS TABLE_NAME,'#COLUMNNAME#' AS TABLE_COLUMN,"
-            +"\n(100.0 * COUNT(#COLUMNNAME#)) / COUNT(1) AS FILL_RATE"
-            +"\nFROM #TABLENAME#;\n ";
-
-    public static String FILLRATE_INSERT=INSERT_INTO_STATEMENT+"\n VALUES(";
 
     /**
      * Generates the Insert statements for the Source DB's Fill Rates
@@ -149,12 +146,12 @@ public class ETLPseudocodeSQLGenerator {
         for(Table sourceTable:etl.getSourceDatabase().getTables()){
             fill_rate_sql_SB.append("--"+sourceTable.getName()+"\n");
             for(Field field:sourceTable.getFields()) {
-                fill_rate_sql_SB.append(FILLRATE_INSERT+"'"+sourceTable.getName()+"','"+field.getName()+"','"+field.getFillRate()+"');\n");
+                fill_rate_sql_SB.append(GenericSQLStatements.SOURCE_FILLRATE_INSERT_SQL +"'"+sourceTable.getName()+"','"+field.getName()+"','"+field.getFillRate()+"');\n");
             }
         }
         //System.out.println(fill_rate_sql_SB.toString());
         String[] fileNameSplit = filename.split("\\.(?=[^\\.]+$)");
-        writeToFile(fill_rate_sql_SB.toString().toUpperCase(),fileNameSplit[0]+"_SourceDB_FillRates"+"."+fileNameSplit[1]);
+        writeToFile(fill_rate_sql_SB.toString().toUpperCase(),fileNameSplit[0]+"_SourceDB_FillRates"+".sql");
     }
 
     /**
@@ -169,12 +166,12 @@ public class ETLPseudocodeSQLGenerator {
             fill_rate_sql_SB.append("--"+targetTable.getName()+"\n");
             for(Field field:targetTable.getFields()) {
                 fill_rate_sql_SB.append(
-                        FILLRATE_SQL.toString().replaceAll("#TABLENAME#", targetTable.getName())
+                        GenericSQLStatements.TARGET_FILLRATE_SQL.toString().replaceAll("#TABLENAME#", targetTable.getName())
                                 .replaceAll("#COLUMNNAME#", field.getName()));
             }
         }
 
         String[] fileNameSplit = filename.split("\\.(?=[^\\.]+$)");
-        writeToFile(fill_rate_sql_SB.toString().toUpperCase(),fileNameSplit[0]+"_TargetDB_FillRates"+"."+fileNameSplit[1]);
+        writeToFile(fill_rate_sql_SB.toString().toUpperCase(),fileNameSplit[0]+"_TargetDB_FillRates"+".sql");
     }
 }
