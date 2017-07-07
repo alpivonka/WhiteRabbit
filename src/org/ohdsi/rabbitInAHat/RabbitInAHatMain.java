@@ -620,6 +620,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 			ETLDocumentDialog dialog = new ETLDocumentDialog(frame);
 			dialog.pack();
 			dialog.setVisible(true);
+
 			DialogStatus ds = dialog.etlDialogStatus;
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
