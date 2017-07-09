@@ -21,21 +21,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import org.ohdsi.utilities.AlphabeticalTableNameComparator;
 import org.ohdsi.utilities.files.QuickAndDirtyXlsxReader;
 import org.ohdsi.utilities.files.QuickAndDirtyXlsxReader.Sheet;
 
 public class Database implements Serializable {
 
 	public enum CDMVersion {
-		CDMV4("CDMV4.csv"), CDMV5("CDMV5.csv"), CDMV501("CDMV5.0.1.csv");
+		CDMV4("CDMV4.csv"), CDMV5("CDMV5.csv"), CDMV501("CDMV5.0.1.csv"), CDMV510("CDMV5.1.0.csv");
 
 		private final String	fileName;
 
@@ -98,6 +95,7 @@ public class Database implements Serializable {
 		} catch (IOException e) {
 			throw new RuntimeException(e.getMessage());
 		}
+		Collections.sort(database.tables,new AlphabeticalTableNameComparator());
 		return database;
 	}
 

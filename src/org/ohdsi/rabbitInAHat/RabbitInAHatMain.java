@@ -73,6 +73,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 	public final static String		ACTION_CMD_SET_TARGET_V4			= "CDM v4";
 	public final static String		ACTION_CMD_SET_TARGET_V5			= "CDM v5.0.0";
 	public final static String		ACTION_CMD_SET_TARGET_V501			= "CDM v5.0.1";
+	public final static String		ACTION_CMD_SET_TARGET_V510			= "CDM v5.1.0";
 	public final static String		ACTION_ADD_STEM_TABLE				= "Add stem table";
 	public final static String		ACTION_CMD_SET_TARGET_CUSTOM		= "Load Custom...";
 	public final static String		ACTION_CMD_MARK_COMPLETED			= "Mark Highlighted As Complete";
@@ -122,7 +123,7 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 		frame.setJMenuBar(createMenuBar());
 
 		ETL etl = new ETL();
-		etl.setTargetDatabase(Database.generateCDMModel(CDMVersion.CDMV501));
+		etl.setTargetDatabase(Database.generateCDMModel(CDMVersion.CDMV510));
 
 		ObjectExchange.etl = etl;
 
@@ -266,6 +267,11 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 		targetCDMV501.addActionListener(this);
 		targetCDMV501.setActionCommand(ACTION_CMD_SET_TARGET_V501);
 		setTarget.add(targetCDMV501);
+
+		JMenuItem targetCDMV510 = new JMenuItem(ACTION_CMD_SET_TARGET_V510);
+		targetCDMV510.addActionListener(this);
+		targetCDMV510.setActionCommand(ACTION_CMD_SET_TARGET_V510);
+		setTarget.add(targetCDMV510);
 
 		JMenuItem loadTarget = new JMenuItem(ACTION_CMD_SET_TARGET_CUSTOM);
 		loadTarget.addActionListener(this);
@@ -424,6 +430,8 @@ public class RabbitInAHatMain implements ResizeListener, ActionListener {
 			case ACTION_CMD_SET_TARGET_V501:
 				doSetTargetCDM(CDMVersion.CDMV501);
 				break;
+			case ACTION_CMD_SET_TARGET_V510:
+				doSetTargetCDM(CDMVersion.CDMV510);
 			case ACTION_CMD_SET_TARGET_CUSTOM:
 				doSetTargetCustom(chooseOpenPath(FILE_FILTER_CSV));
 				break;

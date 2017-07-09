@@ -871,5 +871,11 @@ public class StringUtilities {
 		}
 		return false;
 	}
-	
+	public static boolean isNullOrEmptyString(String value) {
+		if (value == null || value.isEmpty()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

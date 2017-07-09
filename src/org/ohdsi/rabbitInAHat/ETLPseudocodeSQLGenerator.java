@@ -8,6 +8,7 @@ import org.ohdsi.rabbitInAHat.dataModel.MappableItem;
 import org.ohdsi.rabbitInAHat.dataModel.Mapping;
 import org.ohdsi.rabbitInAHat.dataModel.Table;
 import org.ohdsi.utilities.GenericSQLStatements;
+import org.ohdsi.utilities.StringUtilities;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -27,13 +28,7 @@ public class ETLPseudocodeSQLGenerator {
     private static String endSQLComment="*/";
 
 
-    private static boolean isNullOrEmptyString(String value) {
-        if (value == null || value.isEmpty()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+
 
 
     /**
@@ -68,9 +63,9 @@ public class ETLPseudocodeSQLGenerator {
                                             + startSQLComment + sourceTable.getFieldByName(fieldToFieldMap.getSourceItem().getName().trim()).getType() + endSQLComment
                                             + " AS " + fieldToFieldMap.getTargetItem().getName().trim() + " "
                                             + startSQLComment + targetTable.getFieldByName(fieldToFieldMap.getTargetItem().getName().trim()).getType() + endSQLComment);
-                                    if (!isNullOrEmptyString(fieldToFieldMap.getLogic().trim()))
+                                    if (!StringUtilities.isNullOrEmptyString(fieldToFieldMap.getLogic().trim()))
                                         sourceSelectList.append("\n /* FieldToField LOGIC : " + fieldToFieldMap.getLogic().trim() + "*/");
-                                    if (!isNullOrEmptyString(fieldToFieldMap.getComment().trim()))
+                                    if (!StringUtilities.isNullOrEmptyString(fieldToFieldMap.getComment().trim()))
                                         sourceSelectList.append("\n /* FieldToField COMMENT : " + fieldToFieldMap.getComment().trim() + "*/");
                                     if (insertIntoList.length() != 0)
                                         insertIntoList.append(",");
@@ -82,20 +77,20 @@ public class ETLPseudocodeSQLGenerator {
                                 if (field.getName().equals(targetField.getName())) {
                                     if (comment.length() != 0)
                                         comment.append("\n");
-                                    if (!isNullOrEmptyString(field.getComment().trim()))
+                                    if (!StringUtilities.isNullOrEmptyString(field.getComment().trim()))
                                         comment.append(" /* Target Field Comment : " + field.getComment().trim() + "*/");
                                 }
                             }
                         }
-                        if (!isNullOrEmptyString(insertIntoList.toString()))
+                        if (!StringUtilities.isNullOrEmptyString(insertIntoList.toString()))
                             output.append("INSERT INTO " + targetTable.getName().trim().toUpperCase() + " (" + insertIntoList.toString().toUpperCase() + ")");
-                        if (!isNullOrEmptyString(sourceSelectList.toString())) {
+                        if (!StringUtilities.isNullOrEmptyString(sourceSelectList.toString())) {
                             output.append("\nSELECT \n" + sourceSelectList.toString().toUpperCase());
                             output.append("\nFROM " + sourceTable.getName().trim().toUpperCase() + ";\n\n");
                         }
-                        if (!isNullOrEmptyString(logic.toString()))
+                        if (!StringUtilities.isNullOrEmptyString(logic.toString()))
                             output.append(logic.toString().toUpperCase());
-                        if (!isNullOrEmptyString(comment.toString()))
+                        if (!StringUtilities.isNullOrEmptyString(comment.toString()))
                             output.append(comment.toString().toUpperCase());
                     }
                 }
