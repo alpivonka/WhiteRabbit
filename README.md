@@ -1,9 +1,9 @@
 ![alt text](https://github.com/OHDSI/WhiteRabbit/blob/master/src/org/ohdsi/whiteRabbit/WhiteRabbit64.png) WhiteRabbit
 ===========
 
-AL Pivonka's Fork and Functionality
+# AL Pivonka's Fork and Functionality
 
-===========================================
+========
 
 ## Rabbit In A Hat Functionality:
 
@@ -19,7 +19,7 @@ AL Pivonka's Fork and Functionality
 
 ### Added the ability to obtain the source table/attribute fill rates to be used within Rabbit In A Hat.
 
-================================================================================================================================
+========
 
 Introduction
 ========
