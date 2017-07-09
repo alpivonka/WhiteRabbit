@@ -1,5 +1,17 @@
 ![alt text](https://github.com/OHDSI/WhiteRabbit/blob/master/src/org/ohdsi/whiteRabbit/WhiteRabbit64.png) WhiteRabbit
 ===========
+AL Pivonka's Fork and Functionality
+===========================================
+--Rabbit In A Hat Functionality:
+Added the following abilities to extract from the ETL :
+    a) mapping Pseudocode SQL, which represents the mapped source to target table to attribute mappings.
+    b) Source Database and generate Pseudocode SQL of table/attribute fill rates obtained from White Rabbit.
+    c) Target Database and generate Pseudocode SQL of table/attribute fill rates.
+
+--White Rabbit
+Added the ability to obtain the source table/attribute fill rates to be used within Rabbit In A Hat.
+
+================================================================================================================================
 
 Introduction
 ========
