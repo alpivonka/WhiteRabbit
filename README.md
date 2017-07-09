@@ -4,9 +4,10 @@
 AL Pivonka's Fork and Functionality
 
 ===========================================
---Rabbit In A Hat Functionality:
 
-Added the following abilities to extract from the ETL :
+## Rabbit In A Hat Functionality:
+
+### Added the following abilities to extract from the ETL :
 
     - mapping Pseudocode SQL, which represents the mapped source to target table to attribute mappings.
     
@@ -14,9 +15,9 @@ Added the following abilities to extract from the ETL :
     
     - Target Database and generate Pseudocode SQL of table/attribute fill rates.
 
---White Rabbit
+## White Rabbit
 
-Added the ability to obtain the source table/attribute fill rates to be used within Rabbit In A Hat.
+### Added the ability to obtain the source table/attribute fill rates to be used within Rabbit In A Hat.
 
 ================================================================================================================================
 
